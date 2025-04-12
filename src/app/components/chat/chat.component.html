@@ -1,0 +1,58 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h2>AI Resume Assistant</h2>
+    <p>Get personalized help to improve your resume</p>
+  </div>
+
+  <div class="chat-messages" #chatContainer>
+    <div *ngFor="let message of messages"
+         [class]="'message ' + message.type">
+      <div class="message-content">
+        <div class="message-header">
+          <span class="sender">{{ message.type === 'user' ? 'You' : 'AI Assistant' }}</span>
+          <span class="timestamp">{{ message.timestamp | date:'shortTime' }}</span>
+        </div>
+        <div class="message-text">{{ message.content }}</div>
+      </div>
+    </div>
+    <div *ngIf="loading" class="message assistant">
+      <div class="message-content">
+        <div class="message-header">
+          <span class="sender">AI Assistant</span>
+        </div>
+        <div class="message-text">
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Thinking...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <button mat-stroked-button
+              *ngFor="let action of getQuickActions()"
+              (click)="useQuickAction(action)">
+        {{ action }}
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Type your message</mat-label>
+      <input matInput
+             [formControl]="messageControl"
+             (keyup.enter)="sendMessage()"
+             placeholder="Ask for help with your resume...">
+      <button mat-icon-button
+              matSuffix
+              color="primary"
+              [disabled]="messageControl.invalid || loading"
+              (click)="sendMessage()">
+        <mat-icon>send</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+</div>

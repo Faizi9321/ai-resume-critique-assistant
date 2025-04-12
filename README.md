@@ -1,59 +1,71 @@
-# AiResumeCritiqueAssistantng
+# AI Resume Critique Assistant
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.5.
+An AI-powered application that analyzes resumes and provides constructive feedback to help job seekers improve their resumes.
 
-## Development server
+## Features
 
-To start a local development server, run:
+- Upload and analyze resumes in PDF format
+- Get AI-powered feedback on resume content, formatting, and structure
+- Receive actionable suggestions for improvement
+- Modern and user-friendly interface
 
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- OpenAI API key
+
+## Setup
+
+1. Clone the repository:
 ```bash
-ng serve
+git clone [repository-url]
+cd ai-resume-critique-assistant
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+2. Install dependencies:
 ```bash
-ng generate component component-name
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
+3. Create a `.env` file in the root directory and add your OpenAI API key:
+```
+PORT=3000
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-## Building
-
-To build the project run:
-
+4. Start the development server:
 ```bash
-ng build
+npm run dev
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The application will be available at `http://localhost:3000`.
 
-## Running unit tests
+## Project Structure
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+```
+├── client/           # Frontend React application
+├── server/           # Backend Express server
+├── .env              # Environment variables
+├── .gitignore        # Git ignore file
+└── README.md         # Project documentation
 ```
 
-## Running end-to-end tests
+## Contributing
 
-For end-to-end (e2e) testing, run:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-```bash
-ng e2e
-```
+## License
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Additional Resources
+## Acknowledgments
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- [Angular](https://angular.io/)
+- [Express](https://expressjs.com/)
+- [Cursor AI](https://cursor.sh/)
+- [Angular Material](https://material.angular.io/)

@@ -1,0 +1,53 @@
+<div class="analysis-container">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Analyzing your resume...</p>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="analysisResult && !loading" class="results-container">
+    <div class="overall-score">
+      <h2>Overall Score</h2>
+      <div class="score-circle">
+        <span class="score">{{ analysisResult.overallScore }}</span>
+        <span class="score-label">/100</span>
+      </div>
+    </div>
+
+    <div class="section-scores">
+      <div class="section-card" *ngFor="let section of sectionKeys">
+        <h3>{{ section | titlecase }}</h3>
+        <div class="score-bar">
+          <mat-progress-bar
+            [value]="analysisResult.sections[section].score"
+            [color]="getScoreColor(analysisResult.sections[section].score)">
+          </mat-progress-bar>
+          <span class="score-value">{{ analysisResult.sections[section].score }}%</span>
+        </div>
+        <div class="suggestions">
+          <h4>Suggestions:</h4>
+          <ul>
+            <li *ngFor="let suggestion of analysisResult.sections[section].suggestions">
+              {{ suggestion }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" (click)="navigateToChat()">
+        <mat-icon>chat</mat-icon>
+        Chat with AI Assistant
+      </button>
+      <button mat-raised-button color="accent" (click)="navigateToDownload()">
+        <mat-icon>download</mat-icon>
+        Download Enhanced Resume
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,148 @@
+<div class="home-container">
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>Transform Your Resume with AI</h1>
+      <p class="subtitle">Get expert-level feedback and improvements using our advanced AI-powered resume analysis</p>
+      <div class="cta-buttons">
+        <button mat-raised-button color="primary" (click)="navigateToUpload()">
+          <mat-icon>file_upload</mat-icon>
+          Upload Your Resume
+        </button>
+        <button mat-stroked-button color="primary" (click)="scrollToFeatures()">
+          <mat-icon>info_outline</mat-icon>
+          Learn More
+        </button>
+      </div>
+      <div class="supported-formats">
+        <span>Supported formats:</span>
+        <mat-chip-listbox aria-label="Supported file formats">
+          <mat-chip-option>PDF</mat-chip-option>
+          <mat-chip-option>DOCX</mat-chip-option>
+          <mat-chip-option>TXT</mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="assets/resume-analysis.svg" alt="AI Resume Analysis" />
+    </div>
+  </div>
+
+  <div class="features-section" id="features">
+    <h2>Why Choose Our AI Resume Assistant?</h2>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <mat-icon color="primary">analytics</mat-icon>
+        <h3>Smart Analysis</h3>
+        <p>Get instant, AI-powered feedback on your resume's strengths and areas for improvement</p>
+        <ul>
+          <li>Content evaluation</li>
+          <li>Format checking</li>
+          <li>Keyword optimization</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <mat-icon color="primary">question_answer</mat-icon>
+        <h3>Interactive Chat</h3>
+        <p>Engage with our AI assistant for personalized resume improvement suggestions</p>
+        <ul>
+          <li>Real-time responses</li>
+          <li>Tailored advice</li>
+          <li>24/7 availability</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <mat-icon color="primary">stars</mat-icon>
+        <h3>Detailed Scoring</h3>
+        <p>Receive comprehensive scoring across multiple important resume aspects</p>
+        <ul>
+          <li>Readability score</li>
+          <li>ATS compatibility</li>
+          <li>Impact assessment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="how-it-works">
+    <h2>Simple 4-Step Process</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">
+          <mat-icon>file_upload</mat-icon>
+          <span class="step-number">1</span>
+        </div>
+        <h4>Upload Resume</h4>
+        <p>Upload your resume in PDF, DOCX, or TXT format</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <mat-icon>auto_awesome</mat-icon>
+          <span class="step-number">2</span>
+        </div>
+        <h4>AI Analysis</h4>
+        <p>Get instant AI-powered analysis and suggestions</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <mat-icon>question_answer</mat-icon>
+          <span class="step-number">3</span>
+        </div>
+        <h4>Chat Support</h4>
+        <p>Interact with AI for specific improvements</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <mat-icon>file_download</mat-icon>
+          <span class="step-number">4</span>
+        </div>
+        <h4>Download</h4>
+        <p>Get your enhanced resume</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonials">
+    <h2>What Users Say</h2>
+    <div class="testimonial-cards">
+      <mat-card class="testimonial">
+        <mat-card-content>
+          <p>"The AI feedback helped me improve my resume significantly. Got more interviews after the changes!"</p>
+          <div class="rating">
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+          </div>
+        </mat-card-content>
+        <mat-card-footer>
+          <p>- Sarah J., Software Engineer</p>
+        </mat-card-footer>
+      </mat-card>
+      <mat-card class="testimonial">
+        <mat-card-content>
+          <p>"Very intuitive and helpful. The chat feature provided great suggestions for improvement."</p>
+          <div class="rating">
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star</mat-icon>
+            <mat-icon>star_half</mat-icon>
+          </div>
+        </mat-card-content>
+        <mat-card-footer>
+          <p>- Michael R., Marketing Manager</p>
+        </mat-card-footer>
+      </mat-card>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <h2>Ready to Improve Your Resume?</h2>
+    <p>Join thousands of job seekers who have enhanced their resumes with our AI assistant</p>
+    <button mat-raised-button color="primary" (click)="navigateToUpload()">
+      <mat-icon>file_upload</mat-icon>
+      Get Started Now
+    </button>
+  </div>
+</div>

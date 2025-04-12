@@ -1,0 +1,50 @@
+<div class="resume-container">
+  <div class="upload-section">
+    <h2>Upload Resume</h2>
+    <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" />
+  </div>
+
+  <div class="resumes-section">
+    <h2>Your Resumes</h2>
+    <div class="resume-list">
+      <div *ngFor="let resume of resumes"
+           class="resume-item"
+           [class.selected]="selectedResume?.id === resume.id"
+           (click)="selectResume(resume)">
+        <span>{{ resume.fileName }}</span>
+        <span class="date">{{ resume.uploadDate | date:'medium' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="analysis-section" *ngIf="selectedResume">
+    <h2>Analysis</h2>
+    <button (click)="analyzeResume()" [disabled]="!selectedResume">Analyze Resume</button>
+
+    <div class="analysis-result" *ngIf="analysisResult">
+      <h3>Analysis Results</h3>
+      <div class="result-item">
+        <h4>Strengths</h4>
+        <ul>
+          <li *ngFor="let strength of analysisResult.sections.readability.suggestions">{{ strength }}</li>
+        </ul>
+      </div>
+      <div class="result-item">
+        <h4>Areas for Improvement</h4>
+        <ul>
+          <li *ngFor="let improvement of analysisResult.sections.readability.suggestions">{{ improvement }}</li>
+        </ul>
+      </div>
+      <div class="result-item">
+        <h4>Suggestions</h4>
+        <ul>
+          <li *ngFor="let suggestion of analysisResult.sections.readability.suggestions">{{ suggestion }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+</div>
