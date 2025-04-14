@@ -5,15 +5,11 @@ export interface AnalysisResult {
       score: number;
       suggestions: string[];
     };
+    content: {
+      score: number;
+      suggestions: string[];
+    };
     formatting: {
-      score: number;
-      suggestions: string[];
-    };
-    keywordDensity: {
-      score: number;
-      suggestions: string[];
-    };
-    clarity: {
       score: number;
       suggestions: string[];
     };

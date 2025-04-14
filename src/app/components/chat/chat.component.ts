@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Router } from '@angular/router';
 
 interface Message {
   type: 'user' | 'assistant';
@@ -24,14 +25,20 @@ interface Message {
 })
 export class ChatComponent implements OnInit {
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
+  resumeContent: string = '';
 
   messages: Message[] = [];
   messageControl = new FormControl('', [Validators.required]);
   loading = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
+    // Get resume content from router state
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras.state) {
+      this.resumeContent = navigation.extras.state['resumeContent'] || '';
+    }
     this.addWelcomeMessage();
   }
 
@@ -56,7 +63,17 @@ export class ChatComponent implements OnInit {
     this.messageControl.reset();
     this.loading = true;
 
-    this.http.post('/api/chat', { message: userMessage }).subscribe({
+    // Create context from previous messages
+    const context = this.messages
+      .slice(-4) // Get last 4 messages for context
+      .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n');
+
+    this.http.post('/api/chat', {
+      message: userMessage,
+      context: context,
+      resumeContent: this.resumeContent
+    }).subscribe({
       next: (response: any) => {
         this.messages.push({
           type: 'assistant',

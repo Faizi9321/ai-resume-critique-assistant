@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FileSizePipe } from '../../pipes/file-size.pipe';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-upload',
@@ -30,7 +31,18 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
     FileSizePipe
   ],
   templateUrl: './upload.component.html',
-  styleUrls: ['./upload.component.scss']
+  styleUrls: ['./upload.component.scss'],
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms ease-out', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class UploadComponent {
   @ViewChild('fileInput') fileInput!: ElementRef;

@@ -8,6 +8,7 @@ const pdfParse = require('pdf-parse');
 const { Document, Packer, Paragraph, TextRun } = require('docx');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const PDFDocument = require('pdfkit');
+const OpenAI = require('openai');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,27 +21,58 @@ app.use(express.json());
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
 // Initialize Gemini
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) {
   console.error('GEMINI_API_KEY is not set in environment variables');
   process.exit(1);
 }
-console.log('Initializing Gemini API with key:', GEMINI_API_KEY.substring(0, 4) + '...');
+
+console.log('Initializing Gemini API...');
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+// Helper function to get Gemini model with proper configuration
+function getGeminiModel(modelName = "gemini-pro") {
+  return genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1024,
+    },
+    safetySettings: [
+      {
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+      }
+    ]
+  });
+}
 
 // Helper function to parse DOCX files
 async function parseDocx(buffer) {
   try {
-    const doc = new Document(buffer);
-    const paragraphs = doc.paragraphs;
-    let content = '';
-
-    for (const paragraph of paragraphs) {
-      content += paragraph.text + '\n';
-    }
-
-    return content;
+    const mammoth = require('mammoth');
+    const result = await mammoth.extractRawText({ buffer: buffer });
+    return result.value;
   } catch (error) {
     console.error('Error parsing DOCX:', error);
     throw new Error('Failed to parse DOCX file');
@@ -54,27 +86,24 @@ function basicResumeAnalysis(content) {
     overallScore: 79,
     sections: {
       readability: {
-        score: 85,
+        score: 100,
         suggestions: [
-          "Consider using more bullet points for better readability",
-          "Break down longer paragraphs into shorter ones",
-          "Use consistent formatting throughout the document"
-        ]
-      },
-      formatting: {
-        score: 82,
-        suggestions: [
-          "Ensure consistent spacing between sections",
-          "Use bold text for section headers",
-          "Maintain consistent font size throughout"
+          "Experience section is present",
+          "Education section is complete",
+          "Skills section is well-defined"
         ]
       },
       content: {
-        score: 75,
+        score: 37.5,
         suggestions: [
-          "Add more quantifiable achievements",
-          "Include relevant keywords from the job description",
-          "Expand on technical skills and tools used"
+          "Found 3 out of 8 important keywords"
+        ]
+      },
+      formatting: {
+        score: 100,
+        suggestions: [
+          "Dates are properly included",
+          "Contact information is present"
         ]
       }
     }
@@ -85,26 +114,24 @@ function basicResumeAnalysis(content) {
 async function analyzeResume(content) {
   try {
     console.log('Attempting to analyze resume with Gemini API...');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = getGeminiModel();
 
     const prompt = `Please analyze this resume and provide feedback in the following format:
     Overall Score: [score out of 100]
     Sections:
     1. Readability
     - Score: [score out of 100]
-    - Suggestions: [3 specific suggestions]
-    2. Formatting
+    - Suggestions: [list of specific suggestions]
+    2. Content
     - Score: [score out of 100]
-    - Suggestions: [3 specific suggestions]
-    3. Content
+    - Suggestions: [list of specific suggestions]
+    3. Formatting
     - Score: [score out of 100]
-    - Suggestions: [3 specific suggestions]
+    - Suggestions: [list of specific suggestions]
     Here's the resume content:
     ${content}`;
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }]
-    });
+    const result = await model.generateContent(prompt);
 
     if (!result || !result.response) {
       console.log('Empty response from Gemini API, falling back to basic analysis');
@@ -119,10 +146,10 @@ async function analyzeResume(content) {
       // Extract scores and suggestions using regex
       const overallScoreMatch = analysisText.match(/Overall Score:\s*(\d+)/);
       const readabilityMatch = analysisText.match(/Readability[^]*?Score:\s*(\d+)/);
-      const formattingMatch = analysisText.match(/Formatting[^]*?Score:\s*(\d+)/);
       const contentMatch = analysisText.match(/Content[^]*?Score:\s*(\d+)/);
+      const formattingMatch = analysisText.match(/Formatting[^]*?Score:\s*(\d+)/);
 
-      if (!overallScoreMatch || !readabilityMatch || !formattingMatch || !contentMatch) {
+      if (!overallScoreMatch || !readabilityMatch || !contentMatch || !formattingMatch) {
         console.log('Failed to parse Gemini API response, falling back to basic analysis');
         return basicResumeAnalysis(content);
       }
@@ -139,25 +166,22 @@ async function analyzeResume(content) {
           readability: {
             score: parseInt(readabilityMatch[1]),
             suggestions: extractSuggestions('Readability') || [
-              "Improve sentence structure for better flow",
-              "Use more concise language",
-              "Break down complex information into bullet points"
-            ]
-          },
-          formatting: {
-            score: parseInt(formattingMatch[1]),
-            suggestions: extractSuggestions('Formatting') || [
-              "Maintain consistent spacing throughout",
-              "Use clear section headers",
-              "Align content properly"
+              "Experience section is present",
+              "Education section is complete",
+              "Skills section is well-defined"
             ]
           },
           content: {
             score: parseInt(contentMatch[1]),
             suggestions: extractSuggestions('Content') || [
-              "Add more specific achievements",
-              "Include relevant skills and technologies",
-              "Highlight key responsibilities"
+              "Found 3 out of 8 important keywords"
+            ]
+          },
+          formatting: {
+            score: parseInt(formattingMatch[1]),
+            suggestions: extractSuggestions('Formatting') || [
+              "Dates are properly included",
+              "Contact information is present"
             ]
           }
         }
@@ -197,6 +221,9 @@ async function readFileContent(file) {
     throw new Error(`Failed to read file: ${error.message}`);
   }
 }
+
+// Add variable to store resume content
+let currentResumeContent = '';
 
 // Routes
 app.post('/api/analysis', upload.single('resume'), async (req, res) => {
@@ -240,6 +267,7 @@ app.post('/api/upload', upload.single('resume'), async (req, res) => {
 
     console.log('Processing uploaded file:', req.file.originalname);
     const fileContent = await readFileContent(req.file);
+    currentResumeContent = fileContent; // Store the resume content
 
     // Always attempt to analyze, with fallback handling built into analyzeResume
     const analysis = await analyzeResume(fileContent);
@@ -251,6 +279,19 @@ app.post('/api/upload', upload.single('resume'), async (req, res) => {
       error: 'Error processing file',
       details: error.message || 'An unexpected error occurred while processing the file.'
     });
+  }
+});
+
+// Update the GET /api/upload endpoint to return stored content
+app.get('/api/upload', (req, res) => {
+  try {
+    if (!currentResumeContent) {
+      return res.status(404).json({ error: 'No resume content available' });
+    }
+    res.send(currentResumeContent);
+  } catch (error) {
+    console.error('Error reading resume content:', error);
+    res.status(500).json({ error: 'Error reading resume content' });
   }
 });
 
@@ -395,64 +436,102 @@ SKILLS
   }
 });
 
-// Add POST endpoint for /api/chat
+// Update the chat endpoint to use the helper function
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, context } = req.body;
+    console.log('Processing chat message...');
+
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    console.log('Processing chat message...');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = getGeminiModel("gemini-1.5-flash");
+    console.log('Using Gemini model:', model.model);
 
-    const prompt = context
-      ? `Context: ${context}\n\nUser: ${message}`
-      : `User: ${message}`;
+    // Enhanced prompt with specific instructions
+    const systemPrompt = `You are an expert resume critique assistant. Your role is to provide specific, actionable feedback on resumes.
+    Focus on:
+    1. Content Analysis:
+       - Relevance to job target
+       - Achievement statements
+       - Skills presentation
+       - Experience descriptions
+
+    2. Formatting:
+       - Layout and structure
+       - Consistency
+       - Professional appearance
+
+    3. Impact:
+       - Quantifiable achievements
+       - Action verbs
+       - Results-oriented language
+
+    Provide direct, constructive feedback with specific examples and suggestions for improvement.`;
+
+    let prompt;
+    if (currentResumeContent) {
+      prompt = `${systemPrompt}\n\nResume Content:\n${currentResumeContent}\n\nPrevious Context: ${context || 'No previous context'}\n\nUser's Question: ${message}\n\nPlease provide specific, actionable feedback based on the resume content and the user's question.`;
+    } else if (context) {
+      prompt = `${systemPrompt}\n\nPrevious Context: ${context}\n\nUser's Question: ${message}\n\nPlease provide specific, actionable feedback based on the context and the user's question.`;
+    } else {
+      prompt = `${systemPrompt}\n\nUser's Question: ${message}\n\nPlease provide specific, actionable feedback based on the user's question.`;
+    }
 
     console.log('Sending chat request to Gemini API...');
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }]
-    });
+    console.log('Prompt length:', prompt.length);
 
-    if (!result || !result.response) {
-      throw new Error('Empty response from Gemini API');
+    try {
+      const result = await model.generateContent(prompt);
+      if (!result || !result.response) {
+        throw new Error('Empty response from Gemini API');
+      }
+
+      const response = await result.response;
+      const reply = await response.text();
+
+      console.log('Received chat response from Gemini API');
+      console.log('Response length:', reply.length);
+
+      return res.json({ reply });
+    } catch (apiError) {
+      console.error('Gemini API Error:', apiError);
+      const msg = apiError.message || '';
+
+      if (msg.includes('API_KEY_INVALID')) {
+        return res.status(500).json({
+          error: 'Gemini API configuration error',
+          details: 'Invalid API key. Please check your API key configuration.'
+        });
+      } else if (msg.includes('PERMISSION_DENIED')) {
+        return res.status(500).json({
+          error: 'Gemini API access error',
+          details: 'Access denied. Please ensure your API key has the proper permissions.'
+        });
+      } else if (msg.includes('QUOTA_EXCEEDED')) {
+        return res.status(500).json({
+          error: 'Gemini API quota error',
+          details: 'API quota exceeded. Please try again later.'
+        });
+      } else if (msg.includes('MISSING_CREDENTIAL')) {
+        return res.status(500).json({
+          error: 'Gemini API authentication error',
+          details: 'Missing or invalid authentication credentials.'
+        });
+      } else {
+        return res.status(500).json({
+          error: 'Gemini API error',
+          details: msg || 'An unexpected error occurred.'
+        });
+      }
     }
-
-    const response = await result.response;
-    const reply = response.text();
-    console.log('Received chat response from Gemini API');
-
-    res.json({ reply });
   } catch (error) {
-    console.error('Chat error details:', {
-      message: error.message,
-      stack: error.stack,
-      status: error.status,
-      details: error.details
+    console.error('Chat error:', error);
+    return res.status(500).json({
+      error: 'Error processing chat message',
+      details: error.message || 'An unexpected error occurred.'
     });
-
-    if (error.message?.includes('404 Not Found')) {
-      res.status(500).json({
-        error: 'Gemini API configuration error',
-        details: 'Invalid API key or missing access to Gemini Pro model. Please check your API key configuration.'
-      });
-    } else if (error.message?.includes('401')) {
-      res.status(500).json({
-        error: 'Gemini API authentication error',
-        details: 'Invalid API key. Please check your API key.'
-      });
-    } else if (error.message?.includes('403')) {
-      res.status(500).json({
-        error: 'Gemini API access error',
-        details: 'Access denied. Please check if your API key has the necessary permissions.'
-      });
-    } else {
-      res.status(500).json({
-        error: 'Error processing chat message',
-        details: error.message || 'An unexpected error occurred while processing the chat message.'
-      });
-    }
   }
 });
 

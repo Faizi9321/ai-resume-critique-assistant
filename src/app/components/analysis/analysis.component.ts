@@ -40,7 +40,8 @@ export class AnalysisComponent implements OnInit {
   analysisResult: AnalysisResult | null = null;
   loading = true;
   error = '';
-  sectionKeys: SectionKey[] = ['readability', 'formatting', 'keywordDensity', 'clarity'];
+  sectionKeys: SectionKey[] = ['readability', 'content', 'formatting'];
+  resumeContent: string = '';
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -53,11 +54,28 @@ export class AnalysisComponent implements OnInit {
       next: (result) => {
         this.analysisResult = result;
         this.loading = false;
+        this.getResumeContent();
       },
       error: (error) => {
         this.error = 'Error loading analysis results. Please try again.';
         this.loading = false;
         console.error('Analysis error:', error);
+      }
+    });
+  }
+
+  private getResumeContent() {
+    this.http.get('/api/upload', { responseType: 'text' }).subscribe({
+      next: (content) => {
+        if (content) {
+          this.resumeContent = content;
+        } else {
+          console.warn('No resume content received');
+        }
+      },
+      error: (error) => {
+        console.error('Error getting resume content:', error);
+        // Don't set error state, just log it
       }
     });
   }
@@ -69,7 +87,9 @@ export class AnalysisComponent implements OnInit {
   }
 
   navigateToChat() {
-    this.router.navigate(['/chat']);
+    this.router.navigate(['/chat'], {
+      state: { resumeContent: this.resumeContent }
+    });
   }
 
   navigateToDownload() {
